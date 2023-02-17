@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#Global variables
+__returnVal__= #used for function return values
+current_directory=$(pwd) #used to store current directory
+
+
 check_dotnet() {
   # Check if dotnet is installed
   if ! command -v dotnet &> /dev/null
@@ -18,43 +23,46 @@ list_templates() {
 
 # Function to create a new .NET Core solution
 create_add_solution() {
-  add_to_solution=$1
+  local add_to_solution=$1
+  local project_path="$2/$2.csproj"
+  local actual_solution_path
   actual_solution_path=$(pwd)
   # convert add_to_solution to lowercase
   add_to_solution=$(echo "$add_to_solution" | tr '[:upper:]' '[:lower:]')
   if [ "$add_to_solution" == "y" ]; then
     # Prompt for solution path
-    read -r -p "Enter solution path: " solution_path
+    read -r -p "Enter complete solution path [<path-to-solution>/<solution-name.sln]: " solution_path
 
     # Add the project to the solution
-    dotnet sln add "$solution_path/$project_name.csproj"
+    dotnet sln "$solution_path" add "$project_path"
     echo "Project $project_name added to solution successfully!"
     #store the solution path in a variable
     actual_solution_path=$solution_path
   else
     # Prompt for solution name
-    read -r -p "Enter solution name: " solution_name
+    read -r -p "Enter new solution name: " solution_name
 
     # Create the solution
     dotnet new sln -n "$solution_name"
 
     # Add the project to the solution
-    dotnet sln add "$solution_name/$project_name.csproj"
+    dotnet sln "$solution_name.sln" add "$project_path"
     echo "Project $project_name added to the new solution successfully!"
     #store the solution path in a variable
-    actual_solution_path=$solution_name
+    actual_solution_path="$current_directory/$solution_name"
   fi
-  return "$actual_solution_path"
+  __returnVal__="$actual_solution_path"
 }
 
 # Function to create a new .NET Core project
 #accept parameters in this function for project
 create_project() {
-  project_type=$1
-  project_name=$2
+  local project_type=$1
+  local project_name=$2
   # check if we already have a folder with project name, if yes then prompt the user to change the project name else create the new project
   if [ -d "$project_name" ]; then
     echo -e "\e[31mError: Directory $project_name already exists!!\e[0m"
+    local choice="n"
     read -r -p "Do you want to change the project name? (y/n/Y/N): " choice
     # convert choice to lowercase
     choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]')
@@ -69,17 +77,24 @@ create_project() {
   # Create the project
   dotnet new "$project_type" -n "$project_name"
   echo "Project $project_name created successfully!"
-  return "$project_name"
+  __returnVal__=$project_name
 }
 
 netForce_create_project(){
+  # Defining local variables
+  local project_name
+  local project_type
+  local add_to_solution
+  local solution_name
+  local solution_path
+  local actual_solution_path
+  local directory_path 
+  local choice="n"
+  local open_vscode
 
   #-----------STEP 1: CREATE PROJECT DIRECTORY----------------
   # Prompt for directory path (enter $PWD for current directory)
   read -r -p "Enter directory path (PWD for current directory): " directory_path
-
-  # Store current directory to a variable
-  current_directory=$(pwd)
 
   if [ "$directory_path" == "PWD" ]; then
     directory_path=$current_directory
@@ -116,13 +131,15 @@ netForce_create_project(){
   read -r -p "Enter project name: " project_name
 
   # Create the project by calling create_project function and capture the result in project_name variable
-  project_name=$(create_project "$project_type" "$project_name")
+  create_project "$project_type" "$project_name"
+  project_name=$__returnVal__
 
   #-----------STEP 3: CREATE SOLUTION----------------
   # Prompt the user if he wants to add the new project to an existing solution or create a new solution
   read -r -p "Do you want to add the project to an existing solution? (y/n/Y/N): " add_to_solution
   # call the function to create the solution or add the project to it and store the return value in a variable
-  actual_solution_path=$(create_add_solution "$add_to_solution")
+  create_add_solution "$add_to_solution" "$project_name"
+  actual_solution_path=$__returnVal__
   
   #-----------STEP 4: OPEN PROJECT in VSCODE----------------
   # Prompt the user if he wants to open the folder in vscode
@@ -150,27 +167,6 @@ add_project() {
   read -r -p "Enter project type (e.g. console, classlib): " project_type
   read -r -p "Enter project name: " project_name
   read -r -p "Enter solution path: " solution_path
-
-  # Create the project
-  dotnet new "$project_type" -n "$project_name"
-
-  # Add the project to the solution
-  dotnet sln add "$solution_path/$project_name.csproj"
-  echo "Project $project_name added to solution successfully!"
-}
-
-# Function to add a project to the solution
-create_project_and_solution() {
-  
-  # Prompt for directory path (enter $PWD for current directory)
-  read -r -p "Enter directory path: " directory_path
-
-  # Prompt for project type, name and solution path
-  read -r -p "Enter project type (e.g. console, classlib): " project_type
-  read -r -p "Enter project name: " project_name
-  read -r -p "Enter solution name: " solution_path
-  
-  cd "$directory_path" || return
 
   # Create the project
   dotnet new "$project_type" -n "$project_name"
