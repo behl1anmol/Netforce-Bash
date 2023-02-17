@@ -4,6 +4,26 @@
 __returnVal__= #used for function return values
 current_directory=$(pwd) #used to store current directory
 
+# print NETFORCE logo as ASCII art
+display_logo() {
+  echo "|_______________________________________________________________________|"
+  echo " __    _  _______  _______  _______  _______  ______    _______  _______"
+  echo "|  |  | ||       ||       ||       ||       ||    _ |  |       ||       |"
+  echo "|   |_| ||    ___||_     _||    ___||   _   ||   | ||  |       ||    ___|"
+  echo "|       ||   |___   |   |  |   |___ |  | |  ||   |_||_ |       ||   |___ "
+  echo "|  _    ||    ___|  |   |  |    ___||  |_|  ||    __  ||      _||    ___|"
+  echo "| | |   ||   |___   |   |  |   |    |       ||   |  | ||     |_ |   |___ "
+  echo "|_|  |__||_______|  |___|  |___|    |_______||___|  |_||_______||_______|"
+  echo ""
+  echo "|__________________________NETFORCE_____________________________________|"
+  echo "|_____________Interactive .NET Core Solution Creator____________________|"
+  echo "|                                                                       | "
+  echo "|  Author:  Anmol Behl                                                  | "
+  echo "|  Version: 1.0.0                                                       | "
+  echo "|  License: MIT                                                         | "
+  echo "|_______________________________________________________________________|"
+}
+
 
 check_dotnet() {
   # Check if dotnet is installed
@@ -202,16 +222,17 @@ create_custom_templates(){
     echo "Custom template $template_name created successfully!"
 }
 
-
+# show logo
+display_logo
 # Main menu
 while true; do
-  echo "Interactive .NET Core Solution Creator"
-  echo "-----------------------------"
-  echo "1. List available templates"
-  echo "2. Create new project"
-  echo "3. Add project to solution"
-  echo "4. Create custom template"
-  echo "5. Exit"
+  echo "-----------------------------------------------------------------------"
+  echo "[1] List available templates"
+  echo "[2] Create new project"
+  echo "[3] Add project to solution"
+  echo "[4] Create custom template"
+  echo "[5] Exit"
+  echo "_______________________________________________________________________"
   read -r -p "Enter your choice: " choice
 
   case $choice in
